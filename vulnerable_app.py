@@ -30,14 +30,9 @@ def login():
 
         conn = get_db_connection()
 
-        # Inyección de SQL solo si se detecta un payload de inyección de SQL
-        if "' OR '" in password:
-            query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
-            user = conn.execute(query).fetchone()
-        else:
-            query = "SELECT * FROM users WHERE username = ? AND password = ?"
-            hashed_password = hash_password(password)
-            user = conn.execute(query, (username, hashed_password)).fetchone()
+        # Código Corregido y Seguro
+        query = "SELECT * FROM users WHERE username = ? AND password = ?"
+        user = conn.execute(query, (username, password)).fetchone()
 
         print("Consulta SQL generada:", query)
 
@@ -105,7 +100,15 @@ def delete_task(task_id):
         return redirect(url_for('login'))
 
     conn = get_db_connection()
-    conn.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+    # Codigo a modificar porque cualquier usuario logueado puede 
+    # cambiar el número del ID de la tarea en la URL y borrar la tarea 
+    # de otra persona porque el sistema no verifica quién es el dueño
+
+    # conn.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+
+    # Código Corregido y Seguro
+    conn.execute("DELETE FROM tasks WHERE id = ? AND user_id = ?", (task_id, session['user_id']))
+    
     conn.commit()
     conn.close()
 
